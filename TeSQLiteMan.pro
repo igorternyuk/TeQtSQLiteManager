@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql
+QT       += core gui sql printsupport
 CONFIG += c++1z
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -14,10 +14,12 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    tetreewidget.cpp
+    tetreewidget.cpp \
+    settings_util.cpp
 
 HEADERS  += mainwindow.hpp \
-    tetreewidget.hpp
+    tetreewidget.hpp \
+    settings_util.hpp
 
 FORMS    += mainwindow.ui
 

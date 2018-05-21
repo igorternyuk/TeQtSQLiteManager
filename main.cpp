@@ -4,11 +4,15 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    a.setStyle("fusion");
-    MainWindow w;
-    w.move(QApplication::desktop()->rect().center() - w.rect().center());
-    w.show();
+    QApplication app(argc, argv);
+    app.setStyle("fusion");
+    app.setApplicationName("TeQtSQLiteManager");
+    app.setApplicationVersion("1.0");
+    app.setObjectName("TernyukCorporation");
+    app.setOrganizationDomain("www.igorternyuk.com");
+    MainWindow window;
+    //window.move(QApplication::desktop()->rect().center() - window.rect().center());
+    window.show();
 
-    return a.exec();
+    return app.exec();
 }

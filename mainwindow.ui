@@ -18,7 +18,7 @@
     <normaloff>:/icons/database.png</normaloff>:/icons/database.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout">
+   <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
      <widget class="QSplitter" name="splitter_2">
       <property name="orientation">
@@ -39,7 +39,30 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <widget class="QTextEdit" name="textEdit"/>
+       <widget class="QTabWidget" name="tabWidget">
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>Tab 1</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout">
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="topMargin">
+           <number>3</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <property name="bottomMargin">
+           <number>3</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QTextEdit" name="textEdit"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
        <widget class="QTableView" name="tableView"/>
       </widget>
      </widget>
@@ -62,9 +85,11 @@
     <addaction name="actionOpen_database"/>
     <addaction name="actionSave_database"/>
     <addaction name="separator"/>
+    <addaction name="actionNew_SQL_script"/>
     <addaction name="actionOpen_SQL_script"/>
     <addaction name="actionSave_SQL_script"/>
     <addaction name="separator"/>
+    <addaction name="actionExport_to_pdf"/>
     <addaction name="actionPrint"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -167,7 +192,7 @@
   <action name="actionPrint">
    <property name="icon">
     <iconset resource="res.qrc">
-     <normaloff>:/icons/export_to_pdf.png</normaloff>:/icons/export_to_pdf.png</iconset>
+     <normaloff>:/icons/print1.png</normaloff>:/icons/print1.png</iconset>
    </property>
    <property name="text">
     <string>Print</string>
@@ -285,6 +310,23 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionExport_to_pdf">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/export_to_pdf.png</normaloff>:/icons/export_to_pdf.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export to pdf...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionNew_SQL_script">
+   <property name="text">
+    <string>New SQL script</string>
    </property>
   </action>
  </widget>

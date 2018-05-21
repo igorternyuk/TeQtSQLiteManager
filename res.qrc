@@ -48,5 +48,8 @@
         <file>icons/table3.png</file>
         <file>icons/undo.png</file>
         <file>icons/manual.png</file>
+        <file>icons/print1.png</file>
+        <file>icons/print2.png</file>
+        <file>icons/print3.png</file>
     </qresource>
 </RCC>
