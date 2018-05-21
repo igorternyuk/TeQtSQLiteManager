@@ -25,6 +25,12 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="TeTreeWidget" name="treeWidget">
+       <property name="minimumSize">
+        <size>
+         <width>376</width>
+         <height>406</height>
+        </size>
+       </property>
        <column>
         <property name="text">
          <string notr="true">Databases</string>
@@ -40,30 +46,21 @@
         <enum>Qt::Vertical</enum>
        </property>
        <widget class="QTabWidget" name="tabWidget">
-        <widget class="QWidget" name="tab">
-         <attribute name="title">
-          <string>Tab 1</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout">
-          <property name="leftMargin">
-           <number>3</number>
-          </property>
-          <property name="topMargin">
-           <number>3</number>
-          </property>
-          <property name="rightMargin">
-           <number>3</number>
-          </property>
-          <property name="bottomMargin">
-           <number>3</number>
-          </property>
-          <item row="0" column="0">
-           <widget class="QTextEdit" name="textEdit"/>
-          </item>
-         </layout>
-        </widget>
+        <property name="minimumSize">
+         <size>
+          <width>375</width>
+          <height>200</height>
+         </size>
+        </property>
        </widget>
-       <widget class="QTableView" name="tableView"/>
+       <widget class="QTableView" name="tableView">
+        <property name="minimumSize">
+         <size>
+          <width>375</width>
+          <height>200</height>
+         </size>
+        </property>
+       </widget>
       </widget>
      </widget>
     </item>
@@ -82,15 +79,21 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionNew_database"/>
     <addaction name="actionOpen_database"/>
     <addaction name="actionSave_database"/>
+    <addaction name="actionSave_database_as"/>
     <addaction name="separator"/>
     <addaction name="actionNew_SQL_script"/>
     <addaction name="actionOpen_SQL_script"/>
     <addaction name="actionSave_SQL_script"/>
-    <addaction name="separator"/>
+    <addaction name="actionSave_SQL_script_as"/>
+    <addaction name="actionSave_all_scripts"/>
+    <addaction name="actionClose_current_SQL_script"/>
+    <addaction name="actionClose_all_scripts"/>
     <addaction name="actionExport_to_pdf"/>
     <addaction name="actionPrint"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -101,6 +104,8 @@
     <addaction name="actionCut"/>
     <addaction name="actionPaste"/>
     <addaction name="actionFind_and_Replace"/>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -131,13 +136,16 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionNew_database"/>
    <addaction name="actionOpen_database"/>
-   <addaction name="actionOpen_SQL_script"/>
    <addaction name="actionSave_database"/>
+   <addaction name="actionOpen_SQL_script"/>
+   <addaction name="actionNew_SQL_script"/>
    <addaction name="actionSave_SQL_script"/>
    <addaction name="actionExecute"/>
    <addaction name="actionFind_and_Replace"/>
    <addaction name="actionPreferences"/>
+   <addaction name="actionClose_current_SQL_script"/>
    <addaction name="actionQuit"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -156,7 +164,7 @@
   <action name="actionSave_database">
    <property name="icon">
     <iconset resource="res.qrc">
-     <normaloff>:/icons/Save.png</normaloff>:/icons/Save.png</iconset>
+     <normaloff>:/icons/saveDBAs.png</normaloff>:/icons/saveDBAs.png</iconset>
    </property>
    <property name="text">
     <string>Save database</string>
@@ -168,7 +176,7 @@
   <action name="actionOpen_SQL_script">
    <property name="icon">
     <iconset resource="res.qrc">
-     <normaloff>:/icons/sql_script1.png</normaloff>:/icons/sql_script1.png</iconset>
+     <normaloff>:/icons/open3.png</normaloff>:/icons/open3.png</iconset>
    </property>
    <property name="text">
     <string>Open SQL script</string>
@@ -180,7 +188,7 @@
   <action name="actionSave_SQL_script">
    <property name="icon">
     <iconset resource="res.qrc">
-     <normaloff>:/icons/save_as.png</normaloff>:/icons/save_as.png</iconset>
+     <normaloff>:/icons/Save.png</normaloff>:/icons/Save.png</iconset>
    </property>
    <property name="text">
     <string>Save SQL script</string>
@@ -204,7 +212,7 @@
   <action name="actionQuit">
    <property name="icon">
     <iconset resource="res.qrc">
-     <normaloff>:/icons/Quit.png</normaloff>:/icons/Quit.png</iconset>
+     <normaloff>:/icons/close1.png</normaloff>:/icons/close1.png</iconset>
    </property>
    <property name="text">
     <string>Quit</string>
@@ -325,8 +333,82 @@
    </property>
   </action>
   <action name="actionNew_SQL_script">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/newSQLScript2.png</normaloff>:/icons/newSQLScript2.png</iconset>
+   </property>
    <property name="text">
     <string>New SQL script</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/undo.png</normaloff>:/icons/undo.png</iconset>
+   </property>
+   <property name="text">
+    <string>Undo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/redo.png</normaloff>:/icons/redo.png</iconset>
+   </property>
+   <property name="text">
+    <string>Redo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="actionClose_current_SQL_script">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/closeCurrent2.png</normaloff>:/icons/closeCurrent2.png</iconset>
+   </property>
+   <property name="text">
+    <string>Close current SQL script</string>
+   </property>
+  </action>
+  <action name="actionSave_SQL_script_as">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/save_as.png</normaloff>:/icons/save_as.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save SQL script as....</string>
+   </property>
+  </action>
+  <action name="actionSave_database_as">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/SaveDB2.png</normaloff>:/icons/SaveDB2.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save database as...</string>
+   </property>
+  </action>
+  <action name="actionNew_database">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/database_new3.png</normaloff>:/icons/database_new3.png</iconset>
+   </property>
+   <property name="text">
+    <string>New database</string>
+   </property>
+  </action>
+  <action name="actionClose_all_scripts">
+   <property name="text">
+    <string>Close all scripts</string>
+   </property>
+  </action>
+  <action name="actionSave_all_scripts">
+   <property name="text">
+    <string>Save all scripts</string>
    </property>
   </action>
  </widget>

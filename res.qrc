@@ -51,5 +51,19 @@
         <file>icons/print1.png</file>
         <file>icons/print2.png</file>
         <file>icons/print3.png</file>
+        <file>icons/close1.png</file>
+        <file>icons/close2.png</file>
+        <file>icons/closeCurrent.png</file>
+        <file>icons/closeCurrent2.png</file>
+        <file>icons/newSQLScript.png</file>
+        <file>icons/newSQLScript2.png</file>
+        <file>icons/newSQLScript3.png</file>
+        <file>icons/savaAll.png</file>
+        <file>icons/SaveDB1.png</file>
+        <file>icons/SaveDB2.png</file>
+        <file>icons/saveDBAs.png</file>
+        <file>icons/editDB.png</file>
+        <file>icons/removeDB.png</file>
+        <file>icons/SaveDB3.png</file>
     </qresource>
 </RCC>

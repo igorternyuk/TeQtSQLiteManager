@@ -26,28 +26,44 @@ private slots:
     void on_actionAbout_Qt_triggered();
     void on_actionOpen_database_triggered();
     void on_actionSave_database_triggered();
+
+    void on_actionNew_SQL_script_triggered();
     void on_actionOpen_SQL_script_triggered();
     void on_actionSave_SQL_script_triggered();
+    void on_actionSave_SQL_script_as_triggered();
+    void on_actionSave_all_scripts_triggered();
+    void on_actionClose_current_SQL_script_triggered();
+    void on_actionClose_all_scripts_triggered();
+    void on_actionExport_to_pdf_triggered();
     void on_actionPrint_triggered();
+
     void on_actionCopy_triggered();
     void on_actionCut_triggered();
     void on_actionPaste_triggered();
+    void on_actionUndo_triggered();
+    void on_actionRedo_triggered();
+
     void on_actionExecute_triggered();
     void on_actionPreferences_triggered();
     void on_actionManual_triggered();
     void on_actionAbout_program_triggered();
     void on_actionFind_and_Replace_triggered();
-    void on_actionNew_SQL_script_triggered();
+    void on_actionNew_database_triggered();
+    void on_actionSave_database_as_triggered();
 
-    void on_actionExport_to_pdf_triggered();
+
+    void markUnsavedScriptTab();
+    void on_tabWidget_tabCloseRequested(int index);
+
+
 
 private:
-    int create_new_tab(const QString &title, const QString &pathToFile = QString(),
-                        const QString &text = QString());
-    bool openFiles(const QStringList &listOfFiles);
-    bool openFile(const QString &path);
-    bool saveFile(int index);
-    bool saveFileAs(int index);
+    int createNewTab(const QString &title, const QString &pathToFile = QString(),
+                     const QString &text = QString());
+    bool readScriptsFromFiles(const QStringList &listOfFiles);
+    bool readScriptFromFile(const QString &path);
+    bool saveScript(int index);
+    bool saveScriptAs(int index);
     bool saveTextToFile(const QString &filePath, const QString &text);
     void saveAllCurrentSessionFiles();
     void loadAllLastSessionFiles();
@@ -56,6 +72,7 @@ private:
 
     Ui::MainWindow *ui;
     QSqlDatabase mDatabase;
+    QList<QTextEdit*> mTextEdits;
 
     enum class SettingIdentifier
     {
