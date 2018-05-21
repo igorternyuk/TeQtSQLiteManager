@@ -13,8 +13,13 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    tetreewidget.cpp
 
-HEADERS  += mainwindow.hpp
+HEADERS  += mainwindow.hpp \
+    tetreewidget.hpp
 
 FORMS    += mainwindow.ui
+
+RESOURCES += \
+    res.qrc
