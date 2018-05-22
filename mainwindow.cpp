@@ -26,14 +26,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->treeWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tabWidget->setTabsClosable(true);
     mDatabase = QSqlDatabase::addDatabase(DB_DRIVER);
-    loadSettings();
+
     loadAllLastSessionScripts();
+    loadSettings();
 }
 
 MainWindow::~MainWindow()
 {
-    saveSettings();
     saveAllCurrentSessionScripts();
+    saveSettings();    
     delete ui;
 }
 
@@ -113,6 +114,13 @@ void MainWindow::on_actionSave_database_as_triggered()
 
 void MainWindow::on_actionPrint_triggered()
 {
+    QPrintDialog dialog(this);
+    if(dialog.exec() == QPrintDialog::Rejected)
+        return;
+    auto currIndex = ui->tabWidget->currentIndex();
+    if(currIndex == -1)
+        return;
+    mTextEdits.at(currIndex)->print(dialog.printer());
 }
 
 void MainWindow::on_actionCopy_triggered()
@@ -186,31 +194,7 @@ void MainWindow::on_actionOpen_SQL_script_triggered()
 
 void MainWindow::on_actionSave_SQL_script_triggered()
 {
-    auto index = ui->tabWidget->currentIndex();
-    if(index == -1) return;
-    auto currPath = ui->tabWidget->tabBar()->tabToolTip(index);
-    bool ok = false;
-    if(currPath.isEmpty())
-    {
-        ok = saveScriptAs(index);
-    }
-    else
-    {
-        auto currScript = mTextEdits.at(index)->toPlainText();
-        if(saveTextToFile(currPath, currScript))
-        {
-            ui->tabWidget->tabBar()->setTabTextColor(index, Qt::black);
-            ok = true;
-        }
-        else
-        {
-            ok = false;
-        }
-    }
-    if(!ok)
-    {
-        QMessageBox::critical(this, "Error", "Could not save script");
-    }
+    saveScript(ui->tabWidget->currentIndex());
 }
 
 void MainWindow::on_actionSave_SQL_script_as_triggered()
@@ -273,6 +257,31 @@ bool MainWindow::readScriptFromFile(const QString &path)
     return false;
 }
 
+bool MainWindow::saveScript(int index)
+{
+    if(index == -1) return false;
+    auto currPath = ui->tabWidget->tabBar()->tabToolTip(index);
+    bool ok = false;
+    if(currPath.isEmpty())
+    {
+        ok = saveScriptAs(index);
+    }
+    else
+    {
+        auto currScript = mTextEdits.at(index)->toPlainText();
+        if(saveTextToFile(currPath, currScript))
+        {
+            ui->tabWidget->tabBar()->setTabTextColor(index, Qt::black);
+            ok = true;
+        }
+        else
+        {
+            ok = false;
+        }
+    }
+    return ok;
+}
+
 bool MainWindow::readScriptsFromFiles(const QStringList &listOfFiles)
 {
     bool isAtLeastOneFile = false;
@@ -280,26 +289,6 @@ bool MainWindow::readScriptsFromFiles(const QStringList &listOfFiles)
         if(readScriptFromFile(path))
             isAtLeastOneFile = true;
     return isAtLeastOneFile;
-}
-
-bool MainWindow::saveScript(int index)
-{
-    if(index == -1) return false;
-    if(!ui->tabWidget->tabBar()->tabToolTip(index).isEmpty())
-    {
-        auto currScriptPath = ui->tabWidget->tabToolTip(index);
-        auto currScript = mTextEdits.at(index)->toPlainText();
-        if(saveTextToFile(currScriptPath, currScript))
-        {
-            ui->tabWidget->tabBar()->setTabTextColor(index, Qt::black);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    return false;
 }
 
 bool MainWindow::saveScriptAs(int index)
@@ -397,17 +386,13 @@ void MainWindow::saveAllCurrentSessionScripts()
         for(int i = 0; i < ui->tabWidget->count(); ++i)
         {
             auto currPath = ui->tabWidget->tabBar()->tabToolTip(i);
+            auto currText = mTextEdits.at(i)->toPlainText();
             if(currPath.isEmpty())
             {
-                currPath = ui->tabWidget->tabText(i);
-                auto currText = mTextEdits.at(i)->toPlainText();
-                currPath = QString(".lastSession/%1").arg(currPath);
-                saveTextToFile(currPath, currText);
+                currPath = QString(".lastSession/%1")
+                        .arg(ui->tabWidget->tabText(i));
             }
-            else
-            {
-                saveScript(i);
-            }
+            saveTextToFile(currPath, currText);
             stream << currPath << "\n";
         }
         session.flush();
@@ -493,24 +478,22 @@ void MainWindow::saveSettings()
 
 void MainWindow::on_actionExport_to_pdf_triggered()
 {
-    /*
-        auto index = ui->tabWidget->currentIndex();
-        if(index == -1) return;
-        QString startLocation = QStandardPaths::standardLocations(
-                                QStandardPaths::DocumentsLocation)
-                                .value(0, QDir::homePath());
-        QString filter = QString::fromStdString("PDF documents (*.pdf);;"
-                                                "All files (*.*)");
-        QString fileName = QFileDialog::getSaveFileName(this, "Choose a file path",
-                                                        startLocation,
-                                                        filter);
-        QPrinter printer;
-        printer.setOutputFormat(QPrinter::PdfFormat);
-        printer.setOutputFileName(fileName);
-        mListOfTextEdits.at(index)->document()->print(&printer);
-    */
-
-}
+    auto index = ui->tabWidget->currentIndex();
+    if(index == -1) return;
+    QString startLocation = QStandardPaths::standardLocations(
+                            QStandardPaths::DocumentsLocation)
+                            .value(0, QDir::homePath());
+    QString filter = QString::fromStdString("PDF documents (*.pdf);;"
+                                            "All files (*.*)");
+    QString fileName = QFileDialog::getSaveFileName(this, "Choose a file path",
+                                                    startLocation,
+                                                    filter);
+    if(fileName.isEmpty())
+        return;
+    QPrinter printer;
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setOutputFileName(fileName);
+    mTextEdits.at(index)->document()->print(&printer);}
 
 void MainWindow::markUnsavedScriptTab()
 {
