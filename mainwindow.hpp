@@ -51,41 +51,24 @@ private slots:
     void on_actionNew_database_triggered();
     void on_actionSave_database_as_triggered();
 
-
     void markUnsavedScriptTab();
     void on_tabWidget_tabCloseRequested(int index);
 
-
-
 private:
-    int createNewTab(const QString &title, const QString &pathToFile = QString(),
-                     const QString &text = QString());
-    bool readScriptsFromFiles(const QStringList &listOfFiles);
-    bool readScriptFromFile(const QString &path);
-    bool saveScript(int index);
-    bool saveScriptAs(int index);
-    bool saveTextToFile(const QString &filePath, const QString &text);
-    void saveAllCurrentSessionFiles();
-    void loadAllLastSessionFiles();
-    void loadSettings();
-    void saveSettings();
-
-    Ui::MainWindow *ui;
-    QSqlDatabase mDatabase;
-    QList<QTextEdit*> mTextEdits;
-
     enum class SettingIdentifier
     {
         WindowSize,
         WindowPos,
-        CurrentTabIndex
+        CurrentTabIndex,
+        UntitledTabMaxIndex
     };
 
     QMap<SettingIdentifier, QString> mSettingKeys
     {
         { SettingIdentifier::WindowSize, "WindowSize" },
         { SettingIdentifier::WindowPos, "WindowPosition" },
-        { SettingIdentifier::CurrentTabIndex, "CurrentTab" }
+        { SettingIdentifier::CurrentTabIndex, "CurrentTab" },
+        { SettingIdentifier::UntitledTabMaxIndex, "UntitledTabIndexMax" }
     };
 
     const QString mSettingGroup { "Main window geometry"};
@@ -101,6 +84,23 @@ private:
         { SettingGroupIndentifier::MainWindowGeometry, "MainWindowGeometry" },
         { SettingGroupIndentifier::TabWidget , "TabWidget" }
     };
+
+    Ui::MainWindow *ui;
+    QSqlDatabase mDatabase;
+    QList<QTextEdit*> mTextEdits;
+    int mUntitledTabMaxIndex = 0;
+
+    int createNewTab(const QString &title, const QString &pathToFile = QString(),
+                     const QString &text = QString());
+    bool readScriptsFromFiles(const QStringList &listOfFiles);
+    bool readScriptFromFile(const QString &path);
+    bool saveScript(int index);
+    bool saveScriptAs(int index);
+    bool saveTextToFile(const QString &filePath, const QString &text);
+    void saveAllCurrentSessionScripts();
+    void loadAllLastSessionScripts();
+    void loadSettings();
+    void saveSettings();
 };
 
 #endif // MAINWINDOW_HPP

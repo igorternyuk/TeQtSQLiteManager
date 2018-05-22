@@ -11,6 +11,7 @@
 #include <QPrinter>
 #include <QPrintDialog>
 #include <QMessageBox>
+#include <QDebug>
 
 #define DB_DRIVER "QSQLITE"
 
@@ -25,16 +26,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->treeWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tabWidget->setTabsClosable(true);
     mDatabase = QSqlDatabase::addDatabase(DB_DRIVER);
-
     loadSettings();
+    loadAllLastSessionScripts();
 }
 
 MainWindow::~MainWindow()
 {
     saveSettings();
+    saveAllCurrentSessionScripts();
     delete ui;
 }
-
 
 void MainWindow::on_actionNew_database_triggered()
 {
@@ -108,9 +109,7 @@ void MainWindow::on_actionSave_database_as_triggered()
                               QString("Could not open database: %1")
                               .arg(databaseName));
     }
-
 }
-
 
 void MainWindow::on_actionPrint_triggered()
 {
@@ -164,9 +163,7 @@ void MainWindow::on_actionExecute_triggered()
 
 void MainWindow::on_actionNew_SQL_script_triggered()
 {
-    static int counter = 0;
-    createNewTab(QString("Untitled%1").arg(++counter), "Not saved yet",
-                 "SELECT * FROM person;");
+    createNewTab(QString("Untitled%1").arg(++mUntitledTabMaxIndex), "","");
 }
 
 void MainWindow::on_actionOpen_SQL_script_triggered()
@@ -189,7 +186,31 @@ void MainWindow::on_actionOpen_SQL_script_triggered()
 
 void MainWindow::on_actionSave_SQL_script_triggered()
 {
-    saveScript(ui->tabWidget->currentIndex());
+    auto index = ui->tabWidget->currentIndex();
+    if(index == -1) return;
+    auto currPath = ui->tabWidget->tabBar()->tabToolTip(index);
+    bool ok = false;
+    if(currPath.isEmpty())
+    {
+        ok = saveScriptAs(index);
+    }
+    else
+    {
+        auto currScript = mTextEdits.at(index)->toPlainText();
+        if(saveTextToFile(currPath, currScript))
+        {
+            ui->tabWidget->tabBar()->setTabTextColor(index, Qt::black);
+            ok = true;
+        }
+        else
+        {
+            ok = false;
+        }
+    }
+    if(!ok)
+    {
+        QMessageBox::critical(this, "Error", "Could not save script");
+    }
 }
 
 void MainWindow::on_actionSave_SQL_script_as_triggered()
@@ -264,15 +285,7 @@ bool MainWindow::readScriptsFromFiles(const QStringList &listOfFiles)
 bool MainWindow::saveScript(int index)
 {
     if(index == -1) return false;
-    if(ui->tabWidget->tabBar()->tabTextColor(index) == Qt::red)
-    {
-        if(saveScriptAs(index))
-        {
-            ui->tabWidget->tabBar()->setTabTextColor(index, Qt::black);
-            return true;
-        }
-    }
-    else
+    if(!ui->tabWidget->tabBar()->tabToolTip(index).isEmpty())
     {
         auto currScriptPath = ui->tabWidget->tabToolTip(index);
         auto currScript = mTextEdits.at(index)->toPlainText();
@@ -280,6 +293,10 @@ bool MainWindow::saveScript(int index)
         {
             ui->tabWidget->tabBar()->setTabTextColor(index, Qt::black);
             return true;
+        }
+        else
+        {
+            return false;
         }
     }
     return false;
@@ -304,6 +321,7 @@ bool MainWindow::saveScriptAs(int index)
         QFileInfo fileInfo(fo);
         ui->tabWidget->setTabText(index, fileInfo.fileName());
         ui->tabWidget->setTabToolTip(index, filePath);
+        ui->tabWidget->tabBar()->setTabTextColor(index, Qt::black);
         fo.flush();
         fo.close();
         return true;
@@ -346,21 +364,87 @@ int MainWindow::createNewTab(const QString &title, const QString &pathToFile,
     mTextEdits.append(textEdit);
     ui->tabWidget->addTab(textEdit, title);
     auto index = ui->tabWidget->indexOf(textEdit);
-    ui->tabWidget->setTabToolTip(index, pathToFile);
-    if(title.contains(QRegExp("(Untitled)")))
+    if(!pathToFile.contains(QRegExp("(lastSession)")))
+    {
+        ui->tabWidget->setTabToolTip(index, pathToFile);
+    }
+    else
+    {
+        ui->tabWidget->tabBar()->setTabTextColor(index, Qt::red);
+    }
+    if((text.isEmpty() && pathToFile.isEmpty()))
         ui->tabWidget->tabBar()->setTabTextColor(index, Qt::red);
     ui->tabWidget->setCurrentIndex(index);
     return index;
 }
 
-void MainWindow::saveAllCurrentSessionFiles()
+void MainWindow::saveAllCurrentSessionScripts()
 {
+    QFile session("session.data");
+    if(!QDir(".lastSession").exists())
+    {
+        if(!QDir().mkdir(".lastSession"))
+        {
+            QMessageBox::critical(this, "Error",
+                                  "Could not create session folder");
+            return;
+        }
+    }
 
+    if(session.open(QFile::WriteOnly))
+    {
+        QTextStream stream(&session);
+        for(int i = 0; i < ui->tabWidget->count(); ++i)
+        {
+            auto currPath = ui->tabWidget->tabBar()->tabToolTip(i);
+            if(currPath.isEmpty())
+            {
+                currPath = ui->tabWidget->tabText(i);
+                auto currText = mTextEdits.at(i)->toPlainText();
+                currPath = QString(".lastSession/%1").arg(currPath);
+                saveTextToFile(currPath, currText);
+            }
+            else
+            {
+                saveScript(i);
+            }
+            stream << currPath << "\n";
+        }
+        session.flush();
+        session.close();
+    }
+    else
+    {
+        QMessageBox::critical(this, "Error",
+                              QString("Could not save current session: %1")
+                              .arg(session.errorString()));
+    }
 }
 
-void MainWindow::loadAllLastSessionFiles()
+void MainWindow::loadAllLastSessionScripts()
 {
-
+    QFile session("session.data");
+    session.open(QIODevice::ReadOnly | QIODevice::Text);
+    if(session.isOpen())
+    {
+        QTextStream stream(&session);
+        bool isAtLeastOneFile = false;
+        while(!stream.atEnd())
+        {
+            auto currFilePath = stream.readLine();
+            if(readScriptFromFile(currFilePath))
+                isAtLeastOneFile = true;
+        }
+        if(!isAtLeastOneFile)
+            on_actionNew_SQL_script_triggered();
+        session.flush();
+        session.close();
+    }
+    else
+    {
+        QMessageBox::critical(this, "Error",
+                              "Could not restore scripts from last session");
+    }
 }
 
 void MainWindow::loadSettings()
@@ -376,11 +460,19 @@ void MainWindow::loadSettings()
     this->move(pos);
 
     bool ok = false;
-    auto currTabIndex = loadParameter(mSettingKeys[SettingIdentifier::CurrentTabIndex],
+    auto currTabIndex = loadParameter(
+            mSettingKeys[SettingIdentifier::CurrentTabIndex],
             mSettingGroups[SettingGroupIndentifier::TabWidget],
             0).toInt(&ok);
     if(ok)
         ui->tabWidget->setCurrentIndex(currTabIndex);
+    ok = false;
+    auto untitledTabIndexMax = loadParameter(
+                mSettingKeys[SettingIdentifier::UntitledTabMaxIndex],
+                mSettingGroups[SettingGroupIndentifier::TabWidget],
+                0).toInt(&ok);
+    if(ok)
+        mUntitledTabMaxIndex = untitledTabIndexMax;
 }
 
 void MainWindow::saveSettings()
@@ -393,6 +485,9 @@ void MainWindow::saveSettings()
             mSettingGroups[SettingGroupIndentifier::MainWindowGeometry]);
     saveParameter(mSettingKeys[SettingIdentifier::CurrentTabIndex],
             ui->tabWidget->currentIndex(),
+            mSettingGroups[SettingGroupIndentifier::TabWidget]);
+    saveParameter(mSettingKeys[SettingIdentifier::UntitledTabMaxIndex],
+            mUntitledTabMaxIndex,
             mSettingGroups[SettingGroupIndentifier::TabWidget]);
 }
 
@@ -420,11 +515,10 @@ void MainWindow::on_actionExport_to_pdf_triggered()
 void MainWindow::markUnsavedScriptTab()
 {
     QTextEdit* sender = static_cast<QTextEdit*>(QObject::sender());
-    auto index = ui->tabWidget->indexOf(sender->parentWidget());
+    auto index = ui->tabWidget->indexOf(sender);
     if(index == -1) return;
     ui->tabWidget->tabBar()->setTabTextColor(index, Qt::red);
 }
-
 
 void MainWindow::on_actionPreferences_triggered()
 {
