@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>773</width>
-    <height>504</height>
+    <width>792</width>
+    <height>581</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <normaloff>:/icons/database.png</normaloff>:/icons/database.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout_2">
+   <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
      <widget class="QSplitter" name="splitter_2">
       <property name="orientation">
@@ -61,6 +61,7 @@
          </size>
         </property>
        </widget>
+       <widget class="QListWidget" name="listWidget"/>
       </widget>
      </widget>
     </item>
@@ -71,7 +72,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>773</width>
+     <width>792</width>
      <height>19</height>
     </rect>
    </property>

@@ -13,12 +13,13 @@
 #include <QTextStream>
 #include <QPrinter>
 #include <QPrintDialog>
+#include <QListWidgetItem>
 #include <QMessageBox>
 #include <QDebug>
 
 #define DB_DRIVER "QSQLITE"
 
-
+using ListItem = QListWidgetItem;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -214,9 +215,7 @@ void MainWindow::on_actionExecute_triggered()
         }
 
         auto dbName = mDatabase.databaseName();
-        TreeItem* currTreeItem = mDbNameTreeItemMap[dbName];
-        auto tableItem = new TreeItem;
-        tableItem->setIcon(0, QIcon(":icons/table1"));
+
         QRegExp re("(create table){1}([\\s|\\t|\\n]+(if){1}[\\s|\\t|\\n]+"
                    "(not){1}[\\s|\\t|\\n]+(exists){1})?[\\s|\\t|\\n]+",
                    Qt::CaseInsensitive);
@@ -227,8 +226,30 @@ void MainWindow::on_actionExecute_triggered()
         auto posBegin = match.size();
         auto posEnd = sql.indexOf("(");
         QString tableName = sql.mid(posBegin, posEnd - posBegin).trimmed();
-        tableItem->setText(0, tableName);
-        currTreeItem->addChild(tableItem);
+        TreeItem* currTreeItem = mDbNameTreeItemMap[dbName];
+        bool existTableWithSameName = false;
+        auto childCount = currTreeItem->childCount();
+        for(int i = 0; i < childCount; ++i)
+        {
+            if(currTreeItem->child(i)->text(0).toLower() == tableName.toLower())
+            {
+                existTableWithSameName = true;
+                break;
+            }
+        }
+        if(!existTableWithSameName)
+        {
+            auto tableItem = new TreeItem;
+            tableItem->setIcon(0, QIcon(":icons/table1"));
+            tableItem->setText(0, tableName);
+            currTreeItem->addChild(tableItem);
+        }
+        else
+        {
+            QMessageBox::warning(this, "Warning",
+                                 QString("Table %1 already exists")
+                                 .arg(tableName));
+        }
     }
     else if(sql.startsWith("DROP TABLE", Qt::CaseInsensitive))
     {
@@ -257,7 +278,7 @@ void MainWindow::on_actionExecute_triggered()
         int childToRemoveIndex = -1;
         int childCount = currTreeItem->childCount();
         for(int i = 0; i < childCount; ++i)
-            if(currTreeItem->child(i)->text(0) == tableName)
+            if(currTreeItem->child(i)->text(0).toLower() == tableName.toLower())
             {
                 childToRemoveIndex = i;
                 break;
@@ -280,7 +301,7 @@ void MainWindow::on_actionExecute_triggered()
         QSqlQuery query;
         if(!query.exec(sql))
         {
-            QMessageBox::critical(this, "Error", "Could not execute query");
+            QMessageBox::critical(this, "Error", query.lastError().text());
         }
     }
 }
