@@ -207,13 +207,7 @@ void MainWindow::on_actionExecute_triggered()
     }
     else if(sql.startsWith("CREATE TABLE", Qt::CaseInsensitive))
     {
-        QSqlQuery query;
-        if(!query.exec(sql))
-        {
-            QMessageBox::critical(this, "Error", query.lastError().text());
-            return;
-        }
-
+        executeScript(sql);
         auto dbName = mDatabase.databaseName();
 
         QRegExp re("(create table){1}([\\s|\\t|\\n]+(if){1}[\\s|\\t|\\n]+"
@@ -246,19 +240,16 @@ void MainWindow::on_actionExecute_triggered()
         }
         else
         {
-            QMessageBox::warning(this, "Warning",
+            showMessageInListWidget(QString("Table %1 already exists")
+                                    .arg(tableName), false);
+            /*QMessageBox::warning(this, "Warning",
                                  QString("Table %1 already exists")
-                                 .arg(tableName));
+                                 .arg(tableName));*/
         }
     }
     else if(sql.startsWith("DROP TABLE", Qt::CaseInsensitive))
     {
-        QSqlQuery query;
-        if(!query.exec(sql))
-        {
-            QMessageBox::critical(this, "Error", query.lastError().text());
-            return;
-        }
+        executeScript(sql);
 
         auto dbName = mDatabase.databaseName();
         TreeItem* currTreeItem = mDbNameTreeItemMap[dbName];
@@ -298,11 +289,7 @@ void MainWindow::on_actionExecute_triggered()
     }
     else
     {
-        QSqlQuery query;
-        if(!query.exec(sql))
-        {
-            QMessageBox::critical(this, "Error", query.lastError().text());
-        }
+        executeScript(sql);
     }
 }
 
@@ -470,6 +457,30 @@ bool MainWindow::saveTextToFile(const QString &filePath, const QString &text)
     }
     //TODO add error string
     return false;
+}
+
+void MainWindow::executeScript(const QString &sql)
+{
+    QSqlQuery query;
+    if(!query.exec(sql))
+    {
+        qDebug() << "table name repetition";
+        showMessageInListWidget(QString("%1 Error: %2").arg(sql)
+                                .arg(query.lastError().text()), false);
+        return;
+    }
+    showMessageInListWidget(QString("%1").arg(sql));
+}
+
+void MainWindow::showMessageInListWidget(const QString &msg, bool isSuccess)
+{
+    auto item = new ListItem(isSuccess
+                             ? QIcon(":icons/success4")
+                             : QIcon(":icons/fail2"),
+                             msg, ui->listWidget);
+    ui->listWidget->addItem(item);
+    ui->listWidget->setCurrentItem(item);
+    ui->listWidget->clearSelection();
 }
 
 int MainWindow::createNewTab(const QString &title, const QString &pathToFile,

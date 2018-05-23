@@ -65,5 +65,11 @@
         <file>icons/editDB.png</file>
         <file>icons/removeDB.png</file>
         <file>icons/SaveDB3.png</file>
+        <file>icons/fail1.png</file>
+        <file>icons/fail2.png</file>
+        <file>icons/success1.png</file>
+        <file>icons/success2.png</file>
+        <file>icons/success3.png</file>
+        <file>icons/success4.png</file>
     </qresource>
 </RCC>

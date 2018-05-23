@@ -105,6 +105,9 @@ private:
     bool saveScript(int index);
     bool saveScriptAs(int index);
     bool saveTextToFile(const QString &filePath, const QString &text);
+    void executeScript(const QString &sql);
+
+    void showMessageInListWidget(const QString &msg, bool isSuccess = true);
     void saveAllCurrentSessionScripts();
     void loadAllLastSessionScripts();
     void addDatabaseToTreeWidget(const QString &dbName);
