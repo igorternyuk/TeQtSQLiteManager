@@ -1,6 +1,7 @@
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 #include "settings_util.hpp"
+#include "findreplacedialog.h"
 #include <QStandardPaths>
 #include <QFileDialog>
 #include <QTextEdit>
@@ -161,7 +162,11 @@ void MainWindow::on_actionRedo_triggered()
 
 void MainWindow::on_actionFind_and_Replace_triggered()
 {
-
+    auto index = ui->tabWidget->currentIndex();
+    if(index == -1) return;
+    FindReplaceDialog dialog;
+    dialog.setTextEdit(mTextEdits.at(index));
+    dialog.exec();
 }
 
 void MainWindow::on_actionExecute_triggered()

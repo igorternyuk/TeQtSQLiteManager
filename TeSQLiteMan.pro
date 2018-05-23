@@ -15,13 +15,16 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     tetreewidget.cpp \
-    settings_util.cpp
+    settings_util.cpp \
+    findreplacedialog.cpp
 
 HEADERS  += mainwindow.hpp \
     tetreewidget.hpp \
-    settings_util.hpp
+    settings_util.hpp \
+    findreplacedialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    findreplacedialog.ui
 
 RESOURCES += \
     res.qrc
