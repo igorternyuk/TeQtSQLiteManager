@@ -400,6 +400,9 @@
    <property name="text">
     <string>New database</string>
    </property>
+   <property name="toolTip">
+    <string>Create new database</string>
+   </property>
   </action>
   <action name="actionClose_all_scripts">
    <property name="text">

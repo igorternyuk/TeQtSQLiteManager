@@ -5,6 +5,7 @@
 #include <QSqlDatabase>
 #include <QList>
 #include <QMap>
+#include <QTreeWidgetItem>
 
 namespace Ui
 {
@@ -12,6 +13,8 @@ namespace Ui
 }
 
 class QTextEdit;
+class QSqlQueryModel;
+using TreeItem = QTreeWidgetItem;
 
 class MainWindow : public QMainWindow
 {
@@ -24,6 +27,8 @@ public:
 private slots:
     void on_actionQuit_triggered();
     void on_actionAbout_Qt_triggered();
+    void on_actionNew_database_triggered();
+    void on_actionSave_database_as_triggered();
     void on_actionOpen_database_triggered();
     void on_actionSave_database_triggered();
 
@@ -48,11 +53,12 @@ private slots:
     void on_actionManual_triggered();
     void on_actionAbout_program_triggered();
     void on_actionFind_and_Replace_triggered();
-    void on_actionNew_database_triggered();
-    void on_actionSave_database_as_triggered();
+
 
     void markUnsavedScriptTab();
     void on_tabWidget_tabCloseRequested(int index);
+
+    void on_treeWidget_clicked(const QModelIndex &index);
 
 private:
     enum class SettingIdentifier
@@ -87,8 +93,10 @@ private:
 
     Ui::MainWindow *ui;
     QSqlDatabase mDatabase;
+    QSqlQueryModel *mQueryModel;
     QList<QTextEdit*> mTextEdits;
     int mUntitledTabMaxIndex = 0;
+    QMap<QString,TreeItem*> mDbNameTreeItemMap;
 
     int createNewTab(const QString &title, const QString &pathToFile = QString(),
                      const QString &text = QString());
@@ -99,6 +107,7 @@ private:
     bool saveTextToFile(const QString &filePath, const QString &text);
     void saveAllCurrentSessionScripts();
     void loadAllLastSessionScripts();
+    void addDatabaseToTreeWidget(const QString &dbName);
     void loadSettings();
     void saveSettings();
 };

@@ -2,10 +2,12 @@
 #include "ui_mainwindow.h"
 #include "settings_util.hpp"
 #include "findreplacedialog.h"
+#include <QSqlQueryModel>
+#include <QSqlQuery>
+#include <QSqlError>
 #include <QStandardPaths>
 #include <QFileDialog>
 #include <QTextEdit>
-#include <QTreeWidgetItem>
 #include <QFile>
 #include <QFileInfo>
 #include <QTextStream>
@@ -16,7 +18,7 @@
 
 #define DB_DRIVER "QSQLITE"
 
-using TreeItem = QTreeWidgetItem;
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -27,9 +29,26 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->treeWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tabWidget->setTabsClosable(true);
     mDatabase = QSqlDatabase::addDatabase(DB_DRIVER);
-
+    mQueryModel = new QSqlQueryModel(this);
+    ui->tableView->setModel(mQueryModel);
     loadAllLastSessionScripts();
     loadSettings();
+
+    connect(ui->treeWidget, &TeTreeWidget::newTable, [&]()
+    {
+        auto currItem = ui->treeWidget->currentItem();
+        if(!currItem)
+        {
+            QMessageBox::warning(this, "Warning", "Database not selected");
+            return;
+        }
+        auto parent = currItem->parent();
+        if(!parent)
+        {
+
+        }
+        //TODO...
+    });
 }
 
 MainWindow::~MainWindow()
@@ -41,7 +60,16 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionNew_database_triggered()
 {
-
+    auto initDir =
+            QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)
+            .value(0, QDir::homePath());
+    QString filter("Databases (*.db);;All files(*.*)");
+    auto databaseName = QFileDialog::getSaveFileName(this, "Specify database name",
+                                                 initDir, filter);
+    if(databaseName.isEmpty())
+        return;
+    QFile dbFile(databaseName);
+    addDatabaseToTreeWidget(databaseName);
 }
 
 void MainWindow::on_actionOpen_database_triggered()
@@ -50,21 +78,15 @@ void MainWindow::on_actionOpen_database_triggered()
             QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)
             .value(0, QDir::homePath());
     QString filter("Databases (*.db);;All files(*.*)");
-    auto databaseName = QFileDialog::getOpenFileName(this, "Choose database",
-                                                 initDir, filter);
-    if(databaseName.isEmpty())
-        return;
-    auto databaseItem = new TreeItem(ui->treeWidget);
-    databaseItem->setText(0, databaseName);
-    databaseItem->setIcon(0, QIcon(":icons/database3"));
-    ui->treeWidget->addTopLevelItem(databaseItem);
-    mDatabase.setDatabaseName(databaseName);
-    if(!mDatabase.open())
+    auto databaseList = QFileDialog::getOpenFileNames(this, "Choose databases",
+                                                      initDir, filter);
+
+    foreach (auto db_name, databaseList)
     {
-        QMessageBox::critical(this, "Error",
-                              QString("Could not open database: %1")
-                              .arg(databaseName));
+        if(!db_name.isEmpty())
+            addDatabaseToTreeWidget(db_name);
     }
+
 }
 
 void MainWindow::on_actionSave_database_triggered()
@@ -171,7 +193,96 @@ void MainWindow::on_actionFind_and_Replace_triggered()
 
 void MainWindow::on_actionExecute_triggered()
 {
+    auto index = ui->tabWidget->currentIndex();
+    if(index == -1) return;
 
+    qDebug() << "Current index " << index;
+    auto sql = mTextEdits.at(index)->toPlainText();
+    qDebug() << "SQL = " << sql;
+
+    if(sql.startsWith("SELECT", Qt::CaseInsensitive))
+    {
+        mQueryModel->setQuery(sql);
+    }
+    else if(sql.startsWith("CREATE TABLE", Qt::CaseInsensitive))
+    {
+        QSqlQuery query;
+        if(!query.exec(sql))
+        {
+            QMessageBox::critical(this, "Error", query.lastError().text());
+            return;
+        }
+
+        auto dbName = mDatabase.databaseName();
+        TreeItem* currTreeItem = mDbNameTreeItemMap[dbName];
+        auto tableItem = new TreeItem;
+        tableItem->setIcon(0, QIcon(":icons/table1"));
+        QRegExp re("(create table){1}([\\s|\\t|\\n]+(if){1}[\\s|\\t|\\n]+"
+                   "(not){1}[\\s|\\t|\\n]+(exists){1})?[\\s|\\t|\\n]+",
+                   Qt::CaseInsensitive);
+        auto pos = re.indexIn(sql, 0);
+        if(pos == -1) return;
+
+        QString match = re.cap(0);
+        auto posBegin = match.size();
+        auto posEnd = sql.indexOf("(");
+        QString tableName = sql.mid(posBegin, posEnd - posBegin).trimmed();
+        tableItem->setText(0, tableName);
+        currTreeItem->addChild(tableItem);
+    }
+    else if(sql.startsWith("DROP TABLE", Qt::CaseInsensitive))
+    {
+        QSqlQuery query;
+        if(!query.exec(sql))
+        {
+            QMessageBox::critical(this, "Error", query.lastError().text());
+            return;
+        }
+
+        auto dbName = mDatabase.databaseName();
+        TreeItem* currTreeItem = mDbNameTreeItemMap[dbName];
+        QRegExp re("(drop table){1}([\\s|\\t|\\n]+(if){1}[\\s|\\t|\\n]+"
+                   "(exists){1})?[\\s|\\t|\\n]+",
+                   Qt::CaseInsensitive);
+        auto pos = re.indexIn(sql, 0);
+        if(pos == -1) return;
+
+        QString match = re.cap(0);
+        auto posBegin = match.size();
+        QString tableName = sql.mid(posBegin).trimmed();
+        if(tableName.endsWith(";"))
+            tableName.remove(tableName.size() - 1, 1);
+        qDebug() << "Table to remove: " << tableName;
+        tableName = tableName.trimmed();
+        int childToRemoveIndex = -1;
+        int childCount = currTreeItem->childCount();
+        for(int i = 0; i < childCount; ++i)
+            if(currTreeItem->child(i)->text(0) == tableName)
+            {
+                childToRemoveIndex = i;
+                break;
+            }
+        if(childToRemoveIndex != -1)
+        {
+            int reply = QMessageBox::question(this, "Confirm deleting",
+                                              QString("Do yo really want to delete"
+                                              " table %1?").arg(tableName),
+                                              QMessageBox::Yes | QMessageBox::No);
+            if(reply == QMessageBox::Yes)
+            {
+                auto itemToRemove = currTreeItem->child(childToRemoveIndex);
+                currTreeItem->removeChild(itemToRemove);
+             }
+        }
+    }
+    else
+    {
+        QSqlQuery query;
+        if(!query.exec(sql))
+        {
+            QMessageBox::critical(this, "Error", "Could not execute query");
+        }
+    }
 }
 
 void MainWindow::on_actionNew_SQL_script_triggered()
@@ -437,6 +548,34 @@ void MainWindow::loadAllLastSessionScripts()
     }
 }
 
+void MainWindow::addDatabaseToTreeWidget(const QString &dbName)
+{
+    auto databaseItem = new TreeItem(ui->treeWidget);
+    databaseItem->setText(0, dbName);
+    databaseItem->setIcon(0, QIcon(":icons/database3"));
+    mDatabase.setDatabaseName(dbName);
+    if(!mDatabase.open())
+    {
+        QMessageBox::critical(this, "Error",
+                              QString("Could not open database: %1")
+                              .arg(dbName));
+        return;
+    }
+    QSqlQuery query;
+    query.exec("SELECT tbl_name FROM sqlite_master WHERE type LIKE '%table%'");
+    while(query.next())
+    {
+        auto tableName = query.value(0).toString();
+        auto databaseTableItem = new TreeItem(databaseItem);
+        databaseTableItem->setText(0, tableName);
+        databaseTableItem->setIcon(0, QIcon(":icons/table1"));
+        databaseItem->addChild(databaseTableItem);
+    }
+    ui->treeWidget->addTopLevelItem(databaseItem);
+    mDbNameTreeItemMap.insert(dbName, databaseItem);
+    ui->treeWidget->setNewTableActionEnabled(true);
+}
+
 void MainWindow::loadSettings()
 {
     auto size = loadParameter(mSettingKeys[SettingIdentifier::WindowSize],
@@ -540,5 +679,16 @@ void MainWindow::on_actionQuit_triggered()
     if(reply == QMessageBox::Yes)
     {
         close();
+    }
+}
+
+void MainWindow::on_treeWidget_clicked(const QModelIndex &index)
+{
+    if(index.parent().isValid())
+        return;
+    mDatabase.setDatabaseName(index.data().toString());
+    if(!mDatabase.open())
+    {
+        //TODO...
     }
 }
