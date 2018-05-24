@@ -12,10 +12,17 @@ public:
     void setNewTableActionEnabled(bool enabled = true);
 signals:
     void newTable();
+    void removeTable();
+    void removeDatabase();
+    void selectFrom();
+    void selectionChanged();
 /*protected:
     void mousePressEvent(QMouseEvent *event);*/
 private:
     QAction *mActionNewTable;
+    QAction *mActionRemoveTable;
+    QAction *mActionRemoveDatabase;
+    QAction *mActionSelectFrom;
 };
 
 #endif // TETREEWIDGET_H

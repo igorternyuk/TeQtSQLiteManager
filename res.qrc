@@ -71,5 +71,7 @@
         <file>icons/success2.png</file>
         <file>icons/success3.png</file>
         <file>icons/success4.png</file>
+        <file>icons/removeTable.png</file>
+        <file>icons/showTable.png</file>
     </qresource>
 </RCC>

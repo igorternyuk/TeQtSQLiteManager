@@ -63,6 +63,12 @@ private slots:
     void on_treeWidget_clicked(const QModelIndex &index);
 
 private:
+    enum class Selection
+    {
+        NoSelection,
+        Database,
+        Table
+    };
     enum class Settings
     {
         WindowSize,
@@ -104,13 +110,13 @@ private:
     bool saveScriptAs(int index);
     bool saveTextToFile(const QString &filePath, const QString &text);
     void executeScript(const QString &sql);
-
+    void addDatabaseToTreeWidget(const QString &dbName);
     void showMessageInListWidget(const QString &msg, bool isSuccess = true);
+    Selection getCurrentSelection();
     void saveAllCurrentSessionScripts();
     void loadAllLastSessionScripts();
     void saveAllCurrentSessionDb();
     void loadAllCurrentSessionDb();
-    void addDatabaseToTreeWidget(const QString &dbName);
     void loadSettings();
     void saveSettings();
 };

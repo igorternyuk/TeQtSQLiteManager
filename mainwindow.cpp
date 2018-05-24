@@ -38,18 +38,93 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->treeWidget, &TeTreeWidget::newTable, [&]()
     {
-        auto currItem = ui->treeWidget->currentItem();
-        if(!currItem)
+        auto currSel = getCurrentSelection();
+        if(currSel == Selection::NoSelection
+           || currSel == Selection::Table)
         {
             QMessageBox::warning(this, "Warning", "Database not selected");
             return;
         }
-        auto parent = currItem->parent();
-        if(!parent)
+        auto currItem = ui->treeWidget->currentItem();
+        auto dbName = currItem->text(0);
+        //TODO...
+    });
+
+    connect(ui->treeWidget, &TeTreeWidget::removeTable, [&](){
+        auto currSel = getCurrentSelection();
+        if(currSel != Selection::Table)
         {
+            QMessageBox::warning(this, "Warning", "Table not selected");
+            return;
+        }
+        auto currItem = ui->treeWidget->currentItem();
+        auto tableName = currItem->text(0);
+        auto currIndex = ui->tabWidget->currentIndex();
+        if(currIndex == -1)
+        {
+            on_actionNew_SQL_script_triggered();
+            currIndex = ui->tabWidget->currentIndex();
+        }
+        mTextEdits.at(currIndex)->setText(QString("DROP TABLE %1")
+                                          .arg(tableName));
+        on_actionExecute_triggered();
+    });
+
+    connect(ui->treeWidget, &TeTreeWidget::removeDatabase, [&](){
+        auto currSel = getCurrentSelection();
+        if(currSel != Selection::Database)
+        {
+            QMessageBox::warning(this, "Warning", "Database not selected");
+            return;
+        }
+        auto currItem = ui->treeWidget->currentItem();
+        auto dbName = currItem->text(0);
+        auto currIndex = ui->tabWidget->currentIndex();
+        if(currIndex == -1)
+        {
+            on_actionNew_SQL_script_triggered();
+            currIndex = ui->tabWidget->currentIndex();
+        }
+        int reply = QMessageBox::question(this, "Confirm removing, please",
+                                          QString("Do you really want to remove"
+                                                  " database %1").arg(dbName),
+                                          QMessageBox::Yes | QMessageBox::No);
+
+        if(reply == QMessageBox::Yes)
+        {
+            ui->treeWidget->removeItemWidget(currItem, 0);
+            mDbNameTreeItemMap.remove(dbName);
+            delete currItem;
 
         }
-        //TODO...
+    });
+
+    connect(ui->treeWidget, &TeTreeWidget::selectFrom, [&](){
+        auto currSel = getCurrentSelection();
+        if(currSel != Selection::Table)
+        {
+            QMessageBox::warning(this, "Warning", "Table not selected");
+            return;
+        }
+        auto currItem = ui->treeWidget->currentItem();
+        auto tableName = currItem->text(0);
+        auto currIndex = ui->tabWidget->currentIndex();
+        if(currIndex == -1)
+        {
+            on_actionNew_SQL_script_triggered();
+            currIndex = ui->tabWidget->currentIndex();
+        }
+        mTextEdits.at(currIndex)->setText(QString("SELECT * FROM %1")
+                                          .arg(tableName));
+        on_actionExecute_triggered();
+    });
+
+    connect(ui->treeWidget, &TeTreeWidget::selectionChanged, [&](){
+        auto currSel = getCurrentSelection();
+        if(currSel == Selection::Database)
+            ui->treeWidget->setNewTableActionEnabled(true);
+        else
+            ui->treeWidget->setNewTableActionEnabled(false);
     });
 }
 
@@ -207,6 +282,12 @@ void MainWindow::on_actionExecute_triggered()
     if(sql.startsWith("SELECT", Qt::CaseInsensitive))
     {
         mQueryModel->setQuery(sql);
+        if(mQueryModel->lastError().isValid())
+            showMessageInListWidget(QString("%1 Error: %2").arg(sql)
+                                            .arg(mQueryModel->lastError().text()),
+                                            false);
+        else
+            showMessageInListWidget(sql, true);
     }
     else if(sql.startsWith("CREATE TABLE", Qt::CaseInsensitive))
     {
@@ -485,6 +566,14 @@ void MainWindow::showMessageInListWidget(const QString &msg, bool isSuccess)
     ui->listWidget->addItem(item);
     ui->listWidget->setCurrentItem(item);
     ui->listWidget->clearSelection();
+}
+
+MainWindow::Selection MainWindow::getCurrentSelection()
+{
+    auto currItem = ui->treeWidget->currentItem();
+    if(!currItem)
+        return Selection::NoSelection;
+    return currItem->parent() ? Selection::Table : Selection::Database;
 }
 
 int MainWindow::createNewTab(const QString &title, const QString &pathToFile,

@@ -9,18 +9,35 @@ TeTreeWidget::TeTreeWidget(QWidget *parent):
     mActionNewTable = new QAction(QIcon(":icons/newTable.png"),
                                   "New table", this);
     mActionNewTable->setDisabled(true);
-    this->addActions({ mActionNewTable });
 
-    connect(this, &TeTreeWidget::itemClicked, [&](QTreeWidgetItem *item, int)
+    mActionRemoveTable = new QAction(QIcon(":icons/removeTable.png"),
+                                  "Remove table", this);
+
+    mActionRemoveDatabase = new QAction(QIcon(":icons/database_remove.png"),
+                                  "Remove database", this);
+
+    mActionSelectFrom = new QAction(QIcon(":icons/showTable.png"),
+                                  "Show table", this);
+    connect(this, &TeTreeWidget::itemClicked, [&](QTreeWidgetItem *, int)
     {
-        if(!item) return;
-        if(!item->parent())
-            mActionNewTable->setEnabled(true);
-        else
-            mActionNewTable->setEnabled(false);
+        emit selectionChanged();
     });
 
-    connect(mActionNewTable, &QAction::triggered, [&]() { emit newTable(); });
+    connect(mActionNewTable, &QAction::triggered, [&]() {
+        emit newTable();
+    });
+    connect(mActionRemoveTable, &QAction::triggered, [&]() {
+        emit removeTable();
+    });
+    connect(mActionRemoveDatabase, &QAction::triggered, [&]() {
+        emit removeDatabase();
+    });
+    connect(mActionSelectFrom, &QAction::triggered, [&]() {
+        emit selectFrom();
+    });
+
+    this->addActions({ mActionNewTable, mActionRemoveTable,
+                       mActionRemoveDatabase, mActionSelectFrom });
 }
 
 void TeTreeWidget::setNewTableActionEnabled(bool enabled)
