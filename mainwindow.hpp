@@ -108,6 +108,8 @@ private:
     void showMessageInListWidget(const QString &msg, bool isSuccess = true);
     void saveAllCurrentSessionScripts();
     void loadAllLastSessionScripts();
+    void saveAllCurrentSessionDb();
+    void loadAllCurrentSessionDb();
     void addDatabaseToTreeWidget(const QString &dbName);
     void loadSettings();
     void saveSettings();

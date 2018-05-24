@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mQueryModel = new QSqlQueryModel(this);
     ui->tableView->setModel(mQueryModel);
     loadAllLastSessionScripts();
+    loadAllCurrentSessionDb();
     loadSettings();
 
     connect(ui->treeWidget, &TeTreeWidget::newTable, [&]()
@@ -54,8 +55,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    saveSettings();
+    saveAllCurrentSessionDb();
     saveAllCurrentSessionScripts();
-    saveSettings();    
     delete ui;
 }
 
@@ -519,7 +521,6 @@ int MainWindow::createNewTab(const QString &title, const QString &pathToFile,
 
 void MainWindow::saveAllCurrentSessionScripts()
 {
-    QFile session("session.data");
     if(!QDir(".lastSession").exists())
     {
         if(!QDir().mkdir(".lastSession"))
@@ -529,10 +530,10 @@ void MainWindow::saveAllCurrentSessionScripts()
             return;
         }
     }
-
-    if(session.open(QFile::WriteOnly))
+    QFile scriptListFile(".lastSession/script_list.data");
+    if(scriptListFile.open(QFile::WriteOnly))
     {
-        QTextStream stream(&session);
+        QTextStream stream(&scriptListFile);
         for(int i = 0; i < ui->tabWidget->count(); ++i)
         {
             auto currPath = ui->tabWidget->tabBar()->tabToolTip(i);
@@ -545,24 +546,23 @@ void MainWindow::saveAllCurrentSessionScripts()
             saveTextToFile(currPath, currText);
             stream << currPath << "\n";
         }
-        session.flush();
-        session.close();
+        scriptListFile.flush();
+        scriptListFile.close();
     }
     else
     {
         QMessageBox::critical(this, "Error",
                               QString("Could not save current session: %1")
-                              .arg(session.errorString()));
+                              .arg(scriptListFile.errorString()));
     }
 }
 
 void MainWindow::loadAllLastSessionScripts()
 {
-    QFile session("session.data");
-    session.open(QIODevice::ReadOnly | QIODevice::Text);
-    if(session.isOpen())
+    QFile scriptListFile(".lastSession/script_list.data");
+    if(scriptListFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        QTextStream stream(&session);
+        QTextStream stream(&scriptListFile);
         bool isAtLeastOneFile = false;
         while(!stream.atEnd())
         {
@@ -572,8 +572,56 @@ void MainWindow::loadAllLastSessionScripts()
         }
         if(!isAtLeastOneFile)
             on_actionNew_SQL_script_triggered();
-        session.flush();
-        session.close();
+        scriptListFile.close();
+    }
+    else
+    {
+        QMessageBox::critical(this, "Error",
+                              "Could not restore scripts from last session");
+    }
+}
+
+void MainWindow::saveAllCurrentSessionDb()
+{
+    if(!QDir(".lastSession").exists())
+    {
+        if(!QDir().mkdir(".lastSession"))
+        {
+            QMessageBox::critical(this, "Error",
+                                  "Could not create session folder");
+            return;
+        }
+    }
+    QFile dbListFile(".lastSession/db_list.data");
+    if(dbListFile.open(QFile::WriteOnly))
+    {
+        QTextStream stream(&dbListFile);
+        for (auto dbPath: mDbNameTreeItemMap.keys()) {
+            stream << dbPath << "\n";
+        }
+        dbListFile.flush();
+        dbListFile.close();
+    }
+    else
+    {
+        QMessageBox::critical(this, "Error",
+                              QString("Could not save database list: %1")
+                              .arg(dbListFile.errorString()));
+    }
+}
+
+void MainWindow::loadAllCurrentSessionDb()
+{
+    QFile dbListFile(".lastSession/db_list.data");
+    if(dbListFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream stream(&dbListFile);
+        while(!stream.atEnd())
+        {
+            auto currFilePath = stream.readLine();
+            addDatabaseToTreeWidget(currFilePath);
+        }
+        dbListFile.close();
     }
     else
     {
