@@ -1,7 +1,7 @@
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
-#include "settings_util.hpp"
-#include "findreplacedialog.h"
+#include "findreplacedialog.hpp"
+#include "preferencesdialog.hpp"
 #include <QSqlQueryModel>
 #include <QSqlQuery>
 #include <QSqlError>
@@ -65,8 +65,9 @@ void MainWindow::on_actionNew_database_triggered()
             QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)
             .value(0, QDir::homePath());
     QString filter("Databases (*.db);;All files(*.*)");
-    auto databaseName = QFileDialog::getSaveFileName(this, "Specify database name",
-                                                 initDir, filter);
+    auto databaseName = QFileDialog::getSaveFileName(this,
+                                                     "Specify database name",
+                                                     initDir, filter);
     if(databaseName.isEmpty())
         return;
     QFile dbFile(databaseName);
@@ -219,7 +220,8 @@ void MainWindow::on_actionExecute_triggered()
         QString match = re.cap(0);
         auto posBegin = match.size();
         auto posEnd = sql.indexOf("(");
-        QString tableName = sql.mid(posBegin, posEnd - posBegin).trimmed();
+        QString tableName = sql.mid(posBegin, posEnd - posBegin).trimmed()
+                .toLower();
         TreeItem* currTreeItem = mDbNameTreeItemMap[dbName];
         bool existTableWithSameName = false;
         auto childCount = currTreeItem->childCount();
@@ -610,46 +612,53 @@ void MainWindow::addDatabaseToTreeWidget(const QString &dbName)
 
 void MainWindow::loadSettings()
 {
-    auto size = loadParameter(mSettingKeys[SettingIdentifier::WindowSize],
-            mSettingGroups[SettingGroupIndentifier::MainWindowGeometry],
+    auto size = loadParameter(mSettingKeys[Settings::WindowSize],
+            mSettingGroups[SettingGroup::MainWindowGeometry],
             this->size()).value<QSize>();
     this->resize(size);
 
-    auto pos = loadParameter(mSettingKeys[SettingIdentifier::WindowPos],
-            mSettingGroups[SettingGroupIndentifier::MainWindowGeometry],
+    auto pos = loadParameter(mSettingKeys[Settings::WindowPos],
+            mSettingGroups[SettingGroup::MainWindowGeometry],
             this->pos()).value<QPoint>();
     this->move(pos);
 
     bool ok = false;
     auto currTabIndex = loadParameter(
-            mSettingKeys[SettingIdentifier::CurrentTabIndex],
-            mSettingGroups[SettingGroupIndentifier::TabWidget],
+            mSettingKeys[Settings::CurrentTabIndex],
+            mSettingGroups[SettingGroup::TabWidget],
             0).toInt(&ok);
     if(ok)
         ui->tabWidget->setCurrentIndex(currTabIndex);
     ok = false;
     auto untitledTabIndexMax = loadParameter(
-                mSettingKeys[SettingIdentifier::UntitledTabMaxIndex],
-                mSettingGroups[SettingGroupIndentifier::TabWidget],
+                mSettingKeys[Settings::UntitledTabMaxIndex],
+                mSettingGroups[SettingGroup::TabWidget],
                 0).toInt(&ok);
     if(ok)
         mUntitledTabMaxIndex = untitledTabIndexMax;
+
+    QFont restoredFont = loadParameter(SKEY_SCRIPT_EDITOR_FONT,
+                                      SGROUP_SCRIPT_EDITOR,
+                                      QFont("Times", 14))
+                                      .value<QFont>();
+    for(auto textEdit: mTextEdits)
+        textEdit->setFont(restoredFont);
 }
 
 void MainWindow::saveSettings()
 {
-    saveParameter(mSettingKeys[SettingIdentifier::WindowSize],
+    saveParameter(mSettingKeys[Settings::WindowSize],
             this->size(),
-            mSettingGroups[SettingGroupIndentifier::MainWindowGeometry]);
-    saveParameter(mSettingKeys[SettingIdentifier::WindowPos],
+            mSettingGroups[SettingGroup::MainWindowGeometry]);
+    saveParameter(mSettingKeys[Settings::WindowPos],
             this->pos(),
-            mSettingGroups[SettingGroupIndentifier::MainWindowGeometry]);
-    saveParameter(mSettingKeys[SettingIdentifier::CurrentTabIndex],
+            mSettingGroups[SettingGroup::MainWindowGeometry]);
+    saveParameter(mSettingKeys[Settings::CurrentTabIndex],
             ui->tabWidget->currentIndex(),
-            mSettingGroups[SettingGroupIndentifier::TabWidget]);
-    saveParameter(mSettingKeys[SettingIdentifier::UntitledTabMaxIndex],
+            mSettingGroups[SettingGroup::TabWidget]);
+    saveParameter(mSettingKeys[Settings::UntitledTabMaxIndex],
             mUntitledTabMaxIndex,
-            mSettingGroups[SettingGroupIndentifier::TabWidget]);
+            mSettingGroups[SettingGroup::TabWidget]);
 }
 
 void MainWindow::on_actionExport_to_pdf_triggered()
@@ -681,7 +690,15 @@ void MainWindow::markUnsavedScriptTab()
 
 void MainWindow::on_actionPreferences_triggered()
 {
-
+    PreferencesDialog dialog;
+    connect(&dialog, &PreferencesDialog::fontChanged, [&](const QFont &font)
+    {
+        for(auto textEdit: mTextEdits)
+            textEdit->setFont(font);
+        saveParameter(SKEY_SCRIPT_EDITOR_FONT, font, SGROUP_SCRIPT_EDITOR);
+    });
+    if(dialog.exec() == PreferencesDialog::Rejected)
+        return;
 }
 
 void MainWindow::on_actionManual_triggered()

@@ -16,15 +16,19 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     tetreewidget.cpp \
     settings_util.cpp \
-    findreplacedialog.cpp
+    findreplacedialog.cpp \
+    preferencesdialog.cpp
 
 HEADERS  += mainwindow.hpp \
     tetreewidget.hpp \
     settings_util.hpp \
-    findreplacedialog.h
+    preferencesdialog.hpp \
+    findreplacedialog.hpp \
+    defines.h
 
 FORMS    += mainwindow.ui \
-    findreplacedialog.ui
+    findreplacedialog.ui \
+    preferencesdialog.ui
 
 RESOURCES += \
     res.qrc

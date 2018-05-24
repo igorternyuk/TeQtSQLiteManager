@@ -1,11 +1,13 @@
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
+#include "settings_util.hpp"
 #include <QMainWindow>
 #include <QSqlDatabase>
 #include <QList>
 #include <QMap>
 #include <QTreeWidgetItem>
+
 
 namespace Ui
 {
@@ -61,7 +63,7 @@ private slots:
     void on_treeWidget_clicked(const QModelIndex &index);
 
 private:
-    enum class SettingIdentifier
+    enum class Settings
     {
         WindowSize,
         WindowPos,
@@ -69,34 +71,30 @@ private:
         UntitledTabMaxIndex
     };
 
-    QMap<SettingIdentifier, QString> mSettingKeys
-    {
-        { SettingIdentifier::WindowSize, "WindowSize" },
-        { SettingIdentifier::WindowPos, "WindowPosition" },
-        { SettingIdentifier::CurrentTabIndex, "CurrentTab" },
-        { SettingIdentifier::UntitledTabMaxIndex, "UntitledTabIndexMax" }
-    };
-
-    const QString mSettingGroup { "Main window geometry"};
-
-    enum class SettingGroupIndentifier
+    enum class SettingGroup
     {
         MainWindowGeometry,
         TabWidget
     };
-
-    QMap<SettingGroupIndentifier, QString> mSettingGroups
-    {
-        { SettingGroupIndentifier::MainWindowGeometry, "MainWindowGeometry" },
-        { SettingGroupIndentifier::TabWidget , "TabWidget" }
-    };
-
     Ui::MainWindow *ui;
     QSqlDatabase mDatabase;
     QSqlQueryModel *mQueryModel;
     QList<QTextEdit*> mTextEdits;
     int mUntitledTabMaxIndex = 0;
     QMap<QString,TreeItem*> mDbNameTreeItemMap;
+    QMap<Settings, QString> mSettingKeys
+    {
+        { Settings::WindowSize, "WindowSize" },
+        { Settings::WindowPos, "WindowPosition" },
+        { Settings::CurrentTabIndex, "CurrentTab" },
+        { Settings::UntitledTabMaxIndex, "UntitledTabIndexMax" }
+    };
+
+    QMap<SettingGroup, QString> mSettingGroups
+    {
+        { SettingGroup::MainWindowGeometry, "MainWindowGeometry" },
+        { SettingGroup::TabWidget , "TabWidget" }
+    };
 
     int createNewTab(const QString &title, const QString &pathToFile = QString(),
                      const QString &text = QString());

@@ -1,4 +1,4 @@
-#include "findreplacedialog.h"
+#include "findreplacedialog.hpp"
 #include "ui_findreplacedialog.h"
 #include <QTextEdit>
 #include <QTextDocument>
