@@ -30,9 +30,7 @@ private slots:
     void on_actionQuit_triggered();
     void on_actionAbout_Qt_triggered();
     void on_actionNew_database_triggered();
-    void on_actionSave_database_as_triggered();
     void on_actionOpen_database_triggered();
-    void on_actionSave_database_triggered();
 
     void on_actionNew_SQL_script_triggered();
     void on_actionOpen_SQL_script_triggered();

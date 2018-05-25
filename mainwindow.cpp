@@ -46,8 +46,6 @@ MainWindow::MainWindow(QWidget *parent) :
             QMessageBox::warning(this, "Warning", "Database not selected");
             return;
         }
-        //auto currItem = ui->treeWidget->currentItem();
-        //auto dbName = currItem->text(0);
         AddNewTableDialog dialog;
         if(dialog.exec() == AddNewTableDialog::Rejected)
             return;
@@ -176,52 +174,6 @@ void MainWindow::on_actionOpen_database_triggered()
             addDatabaseToTreeWidget(db_name);
     }
 
-}
-
-void MainWindow::on_actionSave_database_triggered()
-{
-    auto initDir =
-            QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)
-            .value(0, QDir::homePath());
-    QString filter("Databases (*.db);;All files(*.*)");
-    auto databaseName = QFileDialog::getSaveFileName(this, "Select destination",
-                                                 initDir, filter);
-    if(databaseName.isEmpty())
-        return;
-    /*auto databaseItem = new TreeItem(ui->treeWidget);
-    databaseItem->setText(0, databaseName);
-    databaseItem->setIcon(0, QIcon(":icons/database3"));
-    ui->treeWidget->addTopLevelItem(databaseItem);
-    mDatabase.setDatabaseName(databaseName);
-    if(!mDatabase.open())
-    {
-        QMessageBox::critical(this, "Error",
-                              QString("Could not open database: %1")
-                              .arg(databaseName));
-    }*/
-}
-
-void MainWindow::on_actionSave_database_as_triggered()
-{
-    auto initDir =
-            QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation)
-            .value(0, QDir::homePath());
-    QString filter("Databases (*.db);;All files(*.*)");
-    auto databaseName = QFileDialog::getSaveFileName(this, "Select destination",
-                                                 initDir, filter);
-    if(databaseName.isEmpty())
-        return;
-    auto databaseItem = new TreeItem(ui->treeWidget);
-    databaseItem->setText(0, databaseName);
-    databaseItem->setIcon(0, QIcon(":icons/database3"));
-    ui->treeWidget->addTopLevelItem(databaseItem);
-    mDatabase.setDatabaseName(databaseName);
-    if(!mDatabase.open())
-    {
-        QMessageBox::critical(this, "Error",
-                              QString("Could not open database: %1")
-                              .arg(databaseName));
-    }
 }
 
 void MainWindow::on_actionPrint_triggered()
@@ -731,6 +683,13 @@ void MainWindow::loadAllCurrentSessionDb()
 
 void MainWindow::addDatabaseToTreeWidget(const QString &dbName)
 {
+    int topLevelItemCount = ui->treeWidget->topLevelItemCount();
+    for(int i = 0; i < topLevelItemCount; ++i)
+    {
+        auto currItem = ui->treeWidget->topLevelItem(i);
+        if(currItem->text(0).toLower() == dbName.toLower())
+            return;
+    }
     auto databaseItem = new TreeItem(ui->treeWidget);
     databaseItem->setText(0, dbName);
     databaseItem->setIcon(0, QIcon(":icons/database3"));

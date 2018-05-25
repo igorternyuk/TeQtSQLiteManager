@@ -82,8 +82,6 @@
     </property>
     <addaction name="actionNew_database"/>
     <addaction name="actionOpen_database"/>
-    <addaction name="actionSave_database"/>
-    <addaction name="actionSave_database_as"/>
     <addaction name="separator"/>
     <addaction name="actionNew_SQL_script"/>
     <addaction name="actionOpen_SQL_script"/>
@@ -139,7 +137,6 @@
    </attribute>
    <addaction name="actionNew_database"/>
    <addaction name="actionOpen_database"/>
-   <addaction name="actionSave_database"/>
    <addaction name="actionOpen_SQL_script"/>
    <addaction name="actionNew_SQL_script"/>
    <addaction name="actionSave_SQL_script"/>
@@ -160,18 +157,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionSave_database">
-   <property name="icon">
-    <iconset resource="res.qrc">
-     <normaloff>:/icons/saveDBAs.png</normaloff>:/icons/saveDBAs.png</iconset>
-   </property>
-   <property name="text">
-    <string>Save database</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionOpen_SQL_script">
@@ -382,15 +367,6 @@
    </property>
    <property name="text">
     <string>Save SQL script as....</string>
-   </property>
-  </action>
-  <action name="actionSave_database_as">
-   <property name="icon">
-    <iconset resource="res.qrc">
-     <normaloff>:/icons/SaveDB2.png</normaloff>:/icons/SaveDB2.png</iconset>
-   </property>
-   <property name="text">
-    <string>Save database as...</string>
    </property>
   </action>
   <action name="actionNew_database">
