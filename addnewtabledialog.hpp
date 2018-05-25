@@ -8,6 +8,8 @@ namespace Ui
     class AddNewTableDialog;
 }
 
+class QAction;
+
 class AddNewTableDialog : public QDialog
 {
     Q_OBJECT
@@ -15,6 +17,7 @@ class AddNewTableDialog : public QDialog
 public:
     explicit AddNewTableDialog(QWidget *parent = nullptr);
     ~AddNewTableDialog();
+    QString query() const;
 
 private slots:
     void on_btnAddField_clicked();
@@ -27,7 +30,7 @@ private:
     {
         FIELD_NAME,
         TYPE,
-        DEFAULT,
+        DEFAULT_VAL,
         CHECK,
         PK,
         AI,
@@ -36,6 +39,9 @@ private:
         FK
     };
     Ui::AddNewTableDialog *ui;
+    QAction *mActionNewField;
+    QAction *mActionRemoveField;
+    QString mQuery;
 };
 
 #endif // ADDNEWTABLEDIALOG_HPP

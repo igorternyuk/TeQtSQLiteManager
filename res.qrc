@@ -73,5 +73,6 @@
         <file>icons/success4.png</file>
         <file>icons/removeTable.png</file>
         <file>icons/showTable.png</file>
+        <file>icons/addField.png</file>
     </qresource>
 </RCC>

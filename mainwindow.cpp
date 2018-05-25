@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "findreplacedialog.hpp"
 #include "preferencesdialog.hpp"
+#include "addnewtabledialog.hpp"
 #include <QSqlQueryModel>
 #include <QSqlQuery>
 #include <QSqlError>
@@ -45,9 +46,18 @@ MainWindow::MainWindow(QWidget *parent) :
             QMessageBox::warning(this, "Warning", "Database not selected");
             return;
         }
-        auto currItem = ui->treeWidget->currentItem();
-        auto dbName = currItem->text(0);
-        //TODO...
+        //auto currItem = ui->treeWidget->currentItem();
+        //auto dbName = currItem->text(0);
+        AddNewTableDialog dialog;
+        if(dialog.exec() == AddNewTableDialog::Rejected)
+            return;
+        int currIndex = ui->tabWidget->currentIndex();
+        if(currIndex == -1)
+        {
+            on_actionNew_SQL_script_triggered();
+            currIndex = ui->tabWidget->currentIndex();
+        }
+        mTextEdits.at(currIndex)->setText(dialog.query());
     });
 
     connect(ui->treeWidget, &TeTreeWidget::removeTable, [&](){
