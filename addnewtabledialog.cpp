@@ -5,7 +5,9 @@
 #include <QRadioButton>
 #include <QCheckBox>
 #include <QMessageBox>
+#ifdef DEBUG
 #include <QDebug>
+#endif
 
 AddNewTableDialog::AddNewTableDialog(QWidget *parent) :
     QDialog(parent),

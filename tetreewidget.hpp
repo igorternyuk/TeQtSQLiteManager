@@ -16,8 +16,6 @@ signals:
     void removeDatabase();
     void selectFrom();
     void selectionChanged();
-/*protected:
-    void mousePressEvent(QMouseEvent *event);*/
 private:
     QAction *mActionNewTable;
     QAction *mActionRemoveTable;

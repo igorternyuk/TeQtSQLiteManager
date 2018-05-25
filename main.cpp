@@ -1,7 +1,6 @@
 #include "defines.h"
 #include "mainwindow.hpp"
 #include <QApplication>
-#include <QDesktopWidget>
 
 int main(int argc, char *argv[])
 {
@@ -12,8 +11,6 @@ int main(int argc, char *argv[])
     app.setObjectName(CORP_NAME);
     app.setOrganizationDomain(APP_DOMAIN);
     MainWindow window;
-    //window.move(QApplication::desktop()->rect().center() - window.rect().center());
     window.show();
-
     return app.exec();
 }

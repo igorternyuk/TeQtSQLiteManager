@@ -1,14 +1,16 @@
 #include "tetreewidget.hpp"
 #include <QAction>
 #include <QMouseEvent>
+#ifdef DEBUG
 #include <QDebug>
+#endif
 
 TeTreeWidget::TeTreeWidget(QWidget *parent):
     QTreeWidget(parent)
 {
     mActionNewTable = new QAction(QIcon(":icons/newTable.png"),
                                   "New table", this);
-    mActionNewTable->setDisabled(true);
+    //mActionNewTable->setDisabled(true);
 
     mActionRemoveTable = new QAction(QIcon(":icons/removeTable.png"),
                                   "Remove table", this);
@@ -44,20 +46,3 @@ void TeTreeWidget::setNewTableActionEnabled(bool enabled)
 {
     mActionNewTable->setEnabled(enabled);
 }
-
-/*void TeTreeWidget::mousePressEvent(QMouseEvent *event)
-{
-    auto currItem = currentItem();
-    if(!currItem)
-    {
-        mActionNewTable->setEnabled(false);
-    }
-    else
-    {
-        if(currItem->parent())
-            mActionNewTable->setEnabled(false);
-        else
-            mActionNewTable->setEnabled(true);
-    }
-    QTreeWidget::mousePressEvent(event);
-}*/

@@ -1,11 +1,13 @@
 #include "findreplacedialog.hpp"
 #include "ui_findreplacedialog.h"
+#include "settings_util.hpp"
 #include <QTextEdit>
 #include <QTextDocument>
 #include <QPushButton>
 #include <QRegExp>
+#ifdef DEBUG
 #include <QDebug>
-#include "settings_util.hpp"
+#endif
 
 FindReplaceDialog::FindReplaceDialog(QWidget *parent) :
     QDialog(parent),
@@ -34,7 +36,6 @@ FindReplaceDialog::FindReplaceDialog(QWidget *parent) :
 
 FindReplaceDialog::~FindReplaceDialog()
 {
-    //qDebug() << "Find&Replace dialog destructor was called";
     writeSettings();
     delete ui;
 }

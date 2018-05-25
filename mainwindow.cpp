@@ -15,8 +15,15 @@
 #include <QPrinter>
 #include <QPrintDialog>
 #include <QListWidgetItem>
+#include <QMimeData>
+#include <QDragEnterEvent>
+#include <QDragLeaveEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
 #include <QMessageBox>
+#ifdef DEBUG
 #include <QDebug>
+#endif
 
 #define DB_DRIVER "QSQLITE"
 
@@ -36,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
     loadAllLastSessionScripts();
     loadAllCurrentSessionDb();
     loadSettings();
+    setAcceptDrops(true);
 
     connect(ui->treeWidget, &TeTreeWidget::newTable, [&]()
     {
@@ -127,13 +135,13 @@ MainWindow::MainWindow(QWidget *parent) :
         on_actionExecute_triggered();
     });
 
-    connect(ui->treeWidget, &TeTreeWidget::selectionChanged, [&](){
+    /*connect(ui->treeWidget, &TeTreeWidget::selectionChanged, [&](){
         auto currSel = getCurrentSelection();
         if(currSel == Selection::Database)
             ui->treeWidget->setNewTableActionEnabled(true);
         else
             ui->treeWidget->setNewTableActionEnabled(false);
-    });
+    });*/
 }
 
 MainWindow::~MainWindow()
@@ -142,6 +150,32 @@ MainWindow::~MainWindow()
     saveAllCurrentSessionDb();
     saveAllCurrentSessionScripts();
     delete ui;
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    event->accept();
+}
+
+void MainWindow::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    event->accept();
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent *event)
+{
+    event->accept();
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    auto data = event->mimeData();
+    auto urls = data->urls();
+    for(auto url: urls)
+    {
+        QString filePath = url.toLocalFile();
+        addDatabaseToTreeWidget(filePath);
+    }
 }
 
 void MainWindow::on_actionNew_database_triggered()
@@ -237,9 +271,7 @@ void MainWindow::on_actionExecute_triggered()
     auto index = ui->tabWidget->currentIndex();
     if(index == -1) return;
 
-    qDebug() << "Current index " << index;
     auto sql = mTextEdits.at(index)->toPlainText();
-    qDebug() << "SQL = " << sql;
 
     if(sql.startsWith("SELECT", Qt::CaseInsensitive))
     {
@@ -311,7 +343,6 @@ void MainWindow::on_actionExecute_triggered()
         QString tableName = sql.mid(posBegin).trimmed();
         if(tableName.endsWith(";"))
             tableName.remove(tableName.size() - 1, 1);
-        qDebug() << "Table to remove: " << tableName;
         tableName = tableName.trimmed();
         int childToRemoveIndex = -1;
         int childCount = currTreeItem->childCount();
@@ -511,7 +542,6 @@ void MainWindow::executeScript(const QString &sql)
     QSqlQuery query;
     if(!query.exec(sql))
     {
-        qDebug() << "table name repetition";
         showMessageInListWidget(QString("%1 Error: %2").arg(sql)
                                 .arg(query.lastError().text()), false);
         return;
